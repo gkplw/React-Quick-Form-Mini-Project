@@ -88,6 +88,7 @@ function QuickForm() {
         {errors.email && <p className="error-message">{errors.email}</p>}
       </div>
 
+      <label>Your Favorite movie :</label>
       <div className="input-container">
         {movies.map((movie) => (
           <label key={movie.title}>
