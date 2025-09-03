@@ -1,33 +1,16 @@
 import { useState } from "react";
 import movies from "../constants/MovieArray";
-import isValidEmail from "../utils/ValidateEmail";
+import { validateForm } from "./Validation";
+import FormField from "./FormField";
+import MovieList from "./MovieList";
 
 function QuickForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedMovie, setSelectedMovie] = useState("")
+  const [selectedMovie, setSelectedMovie] = useState("");
   const [comment, setComment] = useState("");
   const [errors, setErrors] = useState({});
-
-  function validateForm() {
-    let newErrors = {};
-    if (!name) {
-      newErrors.name = "โปรดใส่ชื่อของคุณ";
-    }
-    if (!email) {
-        {
-          newErrors.email = "โปรดใส่อีเมลของคุณ";
-        }
-      } else if (!isValidEmail(email)) {
-        newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
-    }
-    if (!selectedMovie) {
-      newErrors.selectedMovie = "กรุณาเลือกหนังที่คุณชอบ";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length
-  }
+  const [submittedData, setSubmittedData] = useState(null);
 
   function resetForm() {
     setName("");
@@ -35,97 +18,92 @@ function QuickForm() {
     setSelectedMovie("");
     setComment("");
     setErrors({});
+    setSubmittedData(null);
   }
 
   function handleSubmit(event) {
     event.preventDefault();
-    if (validateForm() !== 0) {
+
+    const newErrors = validateForm({ name, email, selectedMovie });
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
       return;
     }
 
     let newFormData = {
-      name: name,
-      email: email,
+      name,
+      email,
       movie: selectedMovie,
-      comment: comment,
+      comment,
     };
 
-    alert(JSON.stringify(newFormData));
-
-    resetForm();
+    setSubmittedData(newFormData);
+      setName("");
+    setEmail("");
+    setSelectedMovie("");
+    setComment("");
+    setErrors({});
   }
+
+  if (submittedData) {
+    return (
+      <div className="submitted-page">
+        <h2>ฟอร์มถูกส่งเรียบร้อยแล้ว ✅</h2>
+        <pre>{JSON.stringify(submittedData, null, 2)}</pre>
+        <button onClick={() => setSubmittedData(null)}>กรอกใหม่</button>
+      </div>
+    );
+  }
+
   return (
     <form className="post-form" onSubmit={handleSubmit}>
-      <div className="input-container">
-        <label>
-          Name : 
-          <input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Enter name here"
-            onChange={(event) => setName(event.target.value)}
-            value={name}
-            required
-          />
-        </label>
-        {errors.name && <p className="error-message">{errors.name}</p>}
-      </div>
- 
-      <div className="input-container">
-        <label>
-          Email :
-          <input
-            id="email"
-            name="email"
-            type="text"
-            placeholder="Enter your email here"
-            onChange={(event) => setEmail(event.target.value)}
-            value={email}
-            required
-          />
-        </label>
-        {errors.email && <p className="error-message">{errors.email}</p>}
-      </div>
+      <FormField label="Name :" id="name" error={errors.name}>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="Enter name here"
+          onChange={(e) => setName(e.target.value)}
+          value={name}
+        />
+      </FormField>
 
-      <label>Your Favorite movie :</label>
-      <div className="input-container">
-        {movies.map((movie) => (
-          <label key={movie.title}>
-            <input
-              type="radio"
-              name="option"
-              value={movie.title}
-              checked={selectedMovie === movie.title}
-              onChange={(event) => setSelectedMovie(event.target.value)}
-              required
-            />
-            <p>Movie: {movie.title} || Year: {movie.year} || Director: {movie.director}</p>
-          </label>
-          
-        ))}
-      <p className="show-message">Selected: {selectedMovie || "None"}</p>
-      {errors.selectedMovie && <p className="error-message">{errors.selectedMovie}</p>}
-      </div>
+      <FormField label="Email :" id="email" error={errors.email}>
+        <input
+          id="email"
+          name="email"
+          type="text"
+          placeholder="Enter your email here"
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
+        />
+      </FormField>
 
-      <div className="input-container">
-        <label>
-          Comment :
-          <textarea
-            id="comment"
-            name="comment"
-            placeholder="Enter comment here"
-            onChange={(event) => setComment(event.target.value)}
-            value={comment}
-            rows={4}
-            cols={60}
-          />
-        </label>
-      </div>
+      <MovieList
+        movies={movies}
+        selectedMovie={selectedMovie}
+        onChange={setSelectedMovie}
+        error={errors.selectedMovie}
+      />
+
+      <FormField label="Comment :" id="comment">
+        <textarea
+          id="comment"
+          name="comment"
+          placeholder="Enter comment here"
+          onChange={(e) => setComment(e.target.value)}
+          value={comment}
+          rows={4}
+          cols={60}
+        />
+      </FormField>
 
       <div className="form-actions">
         <button type="submit">Submit</button>
-        <button type="button" onClick={resetForm}>Reset</button>
+        <button type="button" onClick={resetForm}>
+          Reset
+        </button>
       </div>
     </form>
   );
